@@ -33,13 +33,74 @@ func GridSize(grid [][]int) (width, height int) {
 	return
 }
 
+func GetNeighbors(grid [][]int, i, j int, result *[8]int) {
+	w, h := GridSize(grid)
+	q := 0
+	for ii := i + h - 1; ii <= i+h+1; ii++ {
+		for jj := j + w - 1; jj <= j+w+1; jj++ {
+			if ii == i+h && jj == j+w {
+				continue
+			}
+			result[q] = grid[ii%h][jj%w]
+			q++
+		}
+	}
+	if q != 8 {
+		panic(q)
+	}
+	return
+}
+
+func GetDominantNeighbor(neighbors *[8]int) int {
+	counts := map[int]int{}
+	max_count := 0
+	best_id := -1
+
+	for _, x := range neighbors {
+		if x != 0 {
+			c, _ := counts[x]
+			c++
+			counts[x] = c
+			if c > max_count {
+				max_count = c
+				best_id = x
+			}
+		}
+	}
+	if best_id == -1 {
+		panic(best_id)
+	}
+	return best_id
+}
+
 func GridStep(grid [][]int) (new_grid [][]int) {
 	width, height := GridSize(grid)
 	new_grid = make([][]int, height)
+	var neighbors [8]int
 	for i := range new_grid {
 		new_grid[i] = make([]int, width)
-		// for j := range new_grid[i] {
-		// }
+		for j := range new_grid[i] {
+			GetNeighbors(grid, i, j, &neighbors)
+			num_neighbors := 0
+			for _, x := range neighbors {
+				if x != 0 {
+					num_neighbors++
+				}
+			}
+
+			switch num_neighbors {
+			case 2:
+				new_grid[i][j] = grid[i][j]
+			case 3:
+				if grid[i][j] == 0 {
+					new_grid[i][j] = GetDominantNeighbor(&neighbors)
+				} else {
+					new_grid[i][j] = grid[i][j]
+				}
+			default:
+				new_grid[i][j] = 0
+			}
+		}
 	}
 	return
 }
