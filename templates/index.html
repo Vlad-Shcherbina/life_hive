@@ -1,0 +1,30 @@
+<html>
+<head>
+<meta http-equiv="refresh" content="2.5">
+<style>
+  table, td {
+    padding: 0px;
+    border: none;
+    border-spacing: 1px;
+  }
+  td {
+    height: 7px;
+    width: 7px;
+  }
+</style>
+</head>
+<body>
+
+Hello world
+<table>
+{{range .Grid}}
+  <tr>
+  {{range .}}
+    <td style="background-color:{{(index $.Players .).Color}};"></td>
+  {{end}}
+  </tr>
+{{end}}
+</table>
+
+</body>
+</html>
