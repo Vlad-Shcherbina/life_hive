@@ -1,4 +1,4 @@
-package cnc
+package main
 
 import (
 	"encoding/json"
