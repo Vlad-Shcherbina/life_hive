@@ -57,3 +57,11 @@ func TestGridStep(t *testing.T) {
 		[]int{0, 0, 0, 0, 0, 0},
 	})
 }
+
+func TestGridDiff(t *testing.T) {
+	checkEq(
+		GridDiff(
+			[][]int{[]int{42, 2}},
+			[][]int{[]int{42, 3}}),
+		[]DiffEntry{{X: 1, Y: 0, Old: 2, New: 3}})
+}

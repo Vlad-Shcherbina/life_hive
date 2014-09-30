@@ -105,12 +105,48 @@ func GridStep(grid [][]int) (new_grid [][]int) {
 	return
 }
 
+type DiffEntry struct {
+	X, Y     int
+	Old, New int
+}
+
+func GridDiff(old_grid, new_grid [][]int) []DiffEntry {
+	var result []DiffEntry = nil
+	for i, row := range new_grid {
+		for j, cell := range row {
+			if old_grid[i][j] != cell {
+				result = append(result, DiffEntry{
+					X: j, Y: i,
+					Old: old_grid[i][j],
+					New: cell})
+			}
+		}
+	}
+	return result
+}
+
 func updateState(report StatusReport) {
 	players = make(map[int]Player)
 	for _, player := range report.Players {
 		players[player.Id] = player
 	}
 	players[0] = Player{}
+	if current_grid == nil {
+		fmt.Println("First grid")
+		current_grid = report.Cells
+		return
+	}
+
+	diff_with_current := GridDiff(current_grid, report.Cells)
+	diff_with_predicted := GridDiff(GridStep(current_grid), report.Cells)
+
+	if len(diff_with_current) <= len(diff_with_predicted) {
+		fmt.Println(diff_with_current)
+	} else {
+		fmt.Println("New generation")
+		fmt.Println(diff_with_predicted)
+	}
+
 	current_grid = report.Cells
 }
 
