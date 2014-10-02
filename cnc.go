@@ -125,6 +125,42 @@ func GridDiff(old_grid, new_grid [][]int) []DiffEntry {
 	return result
 }
 
+const NO_CHANGE = -1
+
+type Patch struct {
+	X, Y int
+	Data [][]int
+}
+
+func EmptyPatch(x1, y1, x2, y2 int) Patch {
+	new_cells := make([][]int, y2-y1)
+	for i := range new_cells {
+		new_cells[i] = make([]int, x2-x1)
+		for j := range new_cells[i] {
+			new_cells[i][j] = NO_CHANGE
+		}
+	}
+	return Patch{X: x1, Y: y1, Data: new_cells}
+}
+
+func (patch *Patch) Resize(x1, y1, x2, y2 int) Patch {
+	result := EmptyPatch(x1, y1, x2, y2)
+	for i, row := range patch.Data {
+		y := patch.Y + i
+		for j, cell := range row {
+			x := patch.X + j
+			if x1 <= x && x < x2 && y1 <= y && y < y2 {
+				result.Data[y-y1][x-x1] = cell
+			} else {
+				if cell != NO_CHANGE {
+					panic(cell)
+				}
+			}
+		}
+	}
+	return result
+}
+
 func updateState(report StatusReport) {
 	players = make(map[int]Player)
 	for _, player := range report.Players {

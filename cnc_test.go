@@ -65,3 +65,14 @@ func TestGridDiff(t *testing.T) {
 			[][]int{[]int{42, 3}}),
 		[]DiffEntry{{X: 1, Y: 0, Old: 2, New: 3}})
 }
+
+func TestPatchResize(t *testing.T) {
+	patch := Patch{X: 5, Y: 10, Data: [][]int{[]int{42, NO_CHANGE}}}
+	new_patch := patch.Resize(4, 9, 6, 12)
+	checkEq(new_patch, Patch{
+		X: 4, Y: 9,
+		Data: [][]int{
+			[]int{NO_CHANGE, NO_CHANGE},
+			[]int{NO_CHANGE, 42},
+			[]int{NO_CHANGE, NO_CHANGE}}})
+}
