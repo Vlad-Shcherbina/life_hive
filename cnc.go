@@ -161,6 +161,38 @@ func (patch *Patch) Resize(x1, y1, x2, y2 int) Patch {
 	return result
 }
 
+func (patch *Patch) Shrink() Patch {
+	const inf = 1000000
+	minX := inf
+	maxX := -inf
+	minY := inf
+	maxY := -inf
+	for i, row := range patch.Data {
+		y := patch.Y + i
+		for j, cell := range row {
+			if cell != NO_CHANGE {
+				x := patch.X + j
+				if x < minX {
+					minX = x
+				}
+				if x > maxX {
+					maxX = x
+				}
+				if y < minY {
+					minY = y
+				}
+				if y > maxY {
+					maxY = y
+				}
+			}
+		}
+	}
+	if minX == inf {
+		return Patch{X: patch.X, Y: patch.Y}
+	}
+	return patch.Resize(minX, minY, maxX+1, maxY+1)
+}
+
 func updateState(report StatusReport) {
 	players = make(map[int]Player)
 	for _, player := range report.Players {

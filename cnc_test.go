@@ -68,11 +68,31 @@ func TestGridDiff(t *testing.T) {
 
 func TestPatchResize(t *testing.T) {
 	patch := Patch{X: 5, Y: 10, Data: [][]int{[]int{42, NO_CHANGE}}}
-	new_patch := patch.Resize(4, 9, 6, 12)
-	checkEq(new_patch, Patch{
+	newPatch := patch.Resize(4, 9, 6, 12)
+	checkEq(newPatch, Patch{
 		X: 4, Y: 9,
 		Data: [][]int{
 			[]int{NO_CHANGE, NO_CHANGE},
 			[]int{NO_CHANGE, 42},
 			[]int{NO_CHANGE, NO_CHANGE}}})
+}
+
+func TestPatchShrink(t *testing.T) {
+	n := NO_CHANGE
+
+	patch := Patch{
+		X: 5, Y: 10,
+		Data: [][]int{
+			[]int{n, n, n, n},
+			[]int{n, 1, 2, n},
+		}}
+	checkEq(patch.Shrink(), Patch{X: 6, Y: 11, Data: [][]int{[]int{1, 2}}})
+
+	empty := Patch{
+		X: 5, Y: 10,
+		Data: [][]int{
+			[]int{n, n, n, n},
+			[]int{n, n, n, n},
+		}}
+	checkEq(empty.Shrink().Data, ([][]int)(nil))
 }
