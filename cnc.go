@@ -1,10 +1,16 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
 	"net/http"
+	"os"
 )
 
 type Player struct {
@@ -25,7 +31,8 @@ type Command struct {
 }
 
 var players map[int]Player
-var current_grid [][]int
+var currentGrid [][]int
+var currentGeneration int = 0
 
 func GridSize(grid [][]int) (width, height int) {
 	height = len(grid)
@@ -193,29 +200,86 @@ func (patch *Patch) Shrink() Patch {
 	return patch.Resize(minX, minY, maxX+1, maxY+1)
 }
 
+func CssColorToRGB(color string) (r, g, b uint8) {
+	if color[0] != '#' {
+		panic(color)
+	}
+	bytes, err := hex.DecodeString(color[1:])
+	if err != nil {
+		panic(err)
+	}
+	if len(bytes) != 3 {
+		panic(bytes)
+	}
+	r = bytes[0]
+	g = bytes[1]
+	b = bytes[2]
+	return
+}
+
+func savePic() {
+	const cellSize = 6
+	im := image.NewRGBA(image.Rect(0, 0, 640, 360))
+
+	bg := color.RGBA{128, 128, 128, 255}
+	draw.Draw(im, im.Bounds(), &image.Uniform{bg}, image.ZP, draw.Src)
+
+	for y, row := range currentGrid {
+		for x, cell := range row {
+			var color_ color.NRGBA
+			if cell == 0 {
+				color_ = color.NRGBA{255, 255, 255, 255}
+			} else {
+				r, g, b := CssColorToRGB(players[cell].Color)
+				color_ = color.NRGBA{r, g, b, 255}
+			}
+			for i := 0; i < cellSize; i++ {
+				for j := 0; j < cellSize; j++ {
+					im.Set(x*cellSize+j+20, y*cellSize+i+20, color_)
+				}
+			}
+		}
+	}
+	fmt.Println(im.Bounds().Max.Y)
+
+	fout, err := os.OpenFile(
+		fmt.Sprintf("pics/frame%06d.png", currentGeneration),
+		os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		panic(err)
+	}
+	err = png.Encode(fout, im)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func updateState(report StatusReport) {
 	players = make(map[int]Player)
 	for _, player := range report.Players {
 		players[player.Id] = player
 	}
 	players[0] = Player{}
-	if current_grid == nil {
+	if currentGrid == nil {
 		fmt.Println("First grid")
-		current_grid = report.Cells
+		currentGrid = report.Cells
+		savePic()
 		return
 	}
 
-	diff_with_current := GridDiff(current_grid, report.Cells)
-	diff_with_predicted := GridDiff(GridStep(current_grid), report.Cells)
+	diff_with_current := GridDiff(currentGrid, report.Cells)
+	diff_with_predicted := GridDiff(GridStep(currentGrid), report.Cells)
+
+	currentGrid = report.Cells
 
 	if len(diff_with_current) <= len(diff_with_predicted) {
 		fmt.Println(diff_with_current)
 	} else {
-		fmt.Println("New generation")
+		currentGeneration++
+		fmt.Println("New generation", currentGeneration)
 		fmt.Println(diff_with_predicted)
+		savePic()
 	}
-
-	current_grid = report.Cells
 }
 
 func botHandler(w http.ResponseWriter, req *http.Request) {
@@ -255,7 +319,7 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 		Grid    [][]int
 	}{
 		Players: players,
-		Grid:    current_grid,
+		Grid:    currentGrid,
 	}
 	t.Execute(w, data)
 }

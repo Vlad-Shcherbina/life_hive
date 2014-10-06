@@ -96,3 +96,10 @@ func TestPatchShrink(t *testing.T) {
 		}}
 	checkEq(empty.Shrink().Data, ([][]int)(nil))
 }
+
+func TestCssColorToRGB(t *testing.T) {
+	r, g, b := CssColorToRGB("#ff7f00")
+	checkEq(r, (uint8)(255))
+	checkEq(g, (uint8)(127))
+	checkEq(b, (uint8)(0))
+}
